@@ -4,7 +4,7 @@ apply plugin: 'maven'
 group = 'com.taobao'
 version = '1.0.1'
 
-description = """profile"""
+description = "tprofiler"
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -12,8 +12,12 @@ targetCompatibility = 1.6
 
 
 repositories {
-        
-     maven { url "http://central" }
+    mavenLocal()
+    mavenCentral()
+    maven { url 'http://qc-maven.weimob.com/content/repositories/thirdparty/' }
+    maven { url 'http://qc-maven.weimob.com/content/repositories/weimob/' }
+    maven { url 'http://maven.weimob.com/content/groups/public/' }
+    maven { url 'file:../3rdparty/third_repo' }
 }
 dependencies {
     compile group: 'asm', name: 'asm', version:'3.3.1'
