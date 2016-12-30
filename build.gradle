@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'com.taobao'
+version = '1.0.1'
+
+description = """profile"""
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+
+
+repositories {
+        
+     maven { url "http://central" }
+}
+dependencies {
+    compile group: 'asm', name: 'asm', version:'3.3.1'
+    testCompile group: 'junit', name: 'junit', version:'4.11'
+}
