@@ -14,9 +14,6 @@ targetCompatibility = 1.6
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url 'http://qc-maven.weimob.com/content/repositories/thirdparty/' }
-    maven { url 'http://qc-maven.weimob.com/content/repositories/weimob/' }
-    maven { url 'http://maven.weimob.com/content/groups/public/' }
     maven { url 'file:../3rdparty/third_repo' }
 }
 dependencies {
