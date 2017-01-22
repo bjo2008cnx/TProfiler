@@ -11,7 +11,7 @@ public class SumJavaCode {
 
     public static void main(String[] args) {
         SumJavaCode sjc = new SumJavaCode();
-        String path = args != null ? args[0] : "E:/codes-open-imp/TProfiler/src/main";
+        String path = args.length>0 ? args[0] : "E:/codes-open-imp/TProfiler/src/main";
         File f = new File(path); //目录
         System.out.println(f.getName());
         sjc.countFile(f);
