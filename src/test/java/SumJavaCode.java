@@ -8,16 +8,25 @@ public class SumJavaCode {
     private static long normalLines = 0; // 空行
     private static long commentLines = 0; // 注释行
     private static long whiteLines = 0; // 代码行
+    static String tmp = "E:\\codes-open-imp\\TProfiler\\src\\main\\java\\";
+    static String grinder="E:\\codes-open-imp\\ngrinder\\ngrinder-core\\src\\main\\java\\net";
+    static String ngrinder="E:\\codes-open-imp\\ngrinder\\ngrinder-core\\src\\main\\java\\org";
+    static String[] paths = {tmp,grinder,ngrinder};
 
     public static void main(String[] args) {
+        args=paths;
         SumJavaCode sjc = new SumJavaCode();
-        String path = args.length>0 ? args[0] : "E:/codes-open-imp/TProfiler/src/main";
-        File f = new File(path); //目录
-        System.out.println(f.getName());
-        sjc.countFile(f);
-        System.out.println("空行：" + normalLines);
-        System.out.println("注释行：" + commentLines);
-        System.out.println("代码行：" + whiteLines);
+        System.out.println("|路径| 总行数 | 空行 | 注释行 | 代码行 |");
+        System.out.println("| -- | ------ |----- | -----  |--------|");
+        for (int i = 0; i < args.length; i++) {
+            String path = args[i] ;
+            File f = new File(path); //目录
+           // System.out.println(f.getName());
+            sjc.countFile(f);
+            long total = (normalLines + commentLines + whiteLines);
+            System.out.printf("|%s|%d|%d|%d|%d|", path,total, whiteLines, commentLines, normalLines);
+            System.out.println();
+        }
     }
 
     /**
@@ -27,10 +36,13 @@ public class SumJavaCode {
      */
     private void countFile(File f) {
         File[] childs = f.listFiles();
+        if (childs == null){
+            return;
+        }
         for (int i = 0; i < childs.length; i++) {
             if (!childs[i].isDirectory()) {
                 if (childs[i].getName().endsWith(".java")) {
-                    System.out.println(childs[i].getName());
+                   log(childs[i].getName());
                     sumCode(childs[i]);
                 }
             } else {
@@ -84,5 +96,9 @@ public class SumJavaCode {
                 }
             }
         }
+    }
+
+    private void log(String s){
+       // System.out.println(s);
     }
 }
