@@ -4,14 +4,14 @@ package org.light.testing;
  * @author Michael.Wang
  * @date 2017/2/27
  */
-public class TestMain {
+    public class TestMain {
 
-    public static void main(String[] args) throws InterruptedException {
-        test3();
-        while (true) {
-            test();
+        public static void main(String[] args) throws InterruptedException {
+            test3();
+            while (true) {
+                test();
+            }
         }
-    }
 
     public static void test() throws InterruptedException {
         Thread.sleep(1000);

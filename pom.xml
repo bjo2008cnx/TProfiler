@@ -50,6 +50,7 @@
 					<outputDirectory>pkg/TProfiler/lib</outputDirectory>
 					<archive>
 						<manifestEntries>
+							<mainClass>org.light.testing.TestMain</mainClass>
 							<Premain-Class>com.taobao.profile.Main</Premain-Class>
 						</manifestEntries>
 					</archive>
