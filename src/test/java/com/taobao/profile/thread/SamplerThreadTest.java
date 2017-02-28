@@ -28,7 +28,8 @@ public class SamplerThreadTest {
         ProfConfig config = new ProfConfig();
         config.setDebugMode(true);
         SamplerThread t = new SamplerThread(config);
-        t.run();
+        t.start();
+        Thread.sleep(2000);
         File file = new File(System.getProperty("user.home"), "/logs/tsampler.log" );
         Assert.assertNotNull(file);
         Assert.assertTrue(file.exists());
