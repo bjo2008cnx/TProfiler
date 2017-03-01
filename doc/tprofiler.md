@@ -3,7 +3,7 @@
 tprofiler是taobao开源的也是国内目前为止唯一一款Profiler工具，主要用于java应用的性能分析，不仅能够抓取Java方法的调用时间，还能抓取mysql的执行时间，
 是一款不错的开源性能分析工具。以下对tprofiler源码中的各包进行分析，帮助大家对tprofiler源码有个初步的认识。
 ###1. 最外层
-* Main  TProfiler入口,定义了premain方法，即适用instument的agent类必须的方法
+* Main  TProfiler入口,定义了premain方法，使用instrument的agent类必需的方法
 * Profiler：用于收集运行时应用数据，主要收集方法开始执行时的时间，方法结束时的的时间，用于方法耗时统计，这里有个硬编码，只统计耗时超过10ms的方法
 * Manager：管理类，内部启动四个线程，分别用于：将分析结果写入log文件，Socket开关，时间控制和调用栈取样
 
@@ -32,17 +32,23 @@ topobjects.log:
 * ConfigureProperties：用于加载配置文件的properties类
 * ProfConfig:用于读取与保存profile.properties文件
 
-###5. client包：客户端
+###5. thread
+* DataDumpThread ：将性能分析数据写到log线程
+* InnerSocketThread ：控制开关的线程，用于配合TProfileClient
+* SamplerThread ：调用栈采样线程
+* TimeControlThread ：开始时间结束时间控制线程
+
+###6. client包：客户端
 * TProfileClient：TProfiler客户端,用来远程打开 关闭及查看状态
 
+<!--
 ###dependence_query
 
 ###runtime
+-->
 
-###thread
 
-
-###代码量统计
+##代码量统计
 空行：2357
 注释行：1420
 代码行：468
