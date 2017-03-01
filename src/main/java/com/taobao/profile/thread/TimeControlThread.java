@@ -60,7 +60,7 @@ public class TimeControlThread extends Thread {
 
 	/**
 	 * @param time
-	 * 下次启动时间（后一天）
+	 * 返回离下次启动时间的距离
 	 * @return
 	 */
 	public long nextStartTime(InnerControlTime time) {
