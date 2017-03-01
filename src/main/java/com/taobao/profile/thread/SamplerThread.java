@@ -8,13 +8,13 @@
  */
 package com.taobao.profile.thread;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import com.taobao.profile.Manager;
 import com.taobao.profile.config.ProfConfig;
 import com.taobao.profile.utils.DailyRollingFileWriter;
+
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 调用栈采样线程
@@ -52,29 +52,7 @@ public class SamplerThread extends Thread {
 	public void run() {
 		try {
 			while (true) {
-				if (Manager.instance().canDump()) {
-					Date date = new Date();
-					Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
-					for (Map.Entry<Thread, StackTraceElement[]> entry : map.entrySet()) {
-						Thread thread = entry.getKey();
-						StringBuilder sb = new StringBuilder();
-						sb.append("Thread\t");
-						sb.append(thread.getId());
-						sb.append("\t");
-						sb.append(thread.getName());
-						sb.append("\t");
-						sb.append(thread.getState());
-						sb.append("\t");
-						sb.append(date);
-						sb.append("\n");
-						fileWriter.append(sb.toString());
-						for (StackTraceElement element : entry.getValue()) {
-							fileWriter.append(element.toString());
-							fileWriter.append("\n");
-						}
-						fileWriter.flushAppend();
-					}
-				}
+				dumpMethod();
 				// sleep
 				TimeUnit.SECONDS.sleep(samplerIntervalTime);
 			}
@@ -86,4 +64,35 @@ public class SamplerThread extends Thread {
 			}
 		}
 	}
+
+	private void dumpMethod() {
+		if (Manager.instance().canDump()) {
+            Date date = new Date();
+            Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+            for (Map.Entry<Thread, StackTraceElement[]> entry : map.entrySet()) {
+                Thread thread = entry.getKey();
+				dumpToFile(date, entry, thread);
+            }
+        }
+	}
+
+	private void dumpToFile(Date date, Map.Entry<Thread, StackTraceElement[]> entry, Thread thread) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Thread\t");
+		sb.append(thread.getId());
+		sb.append("\t");
+		sb.append(thread.getName());
+		sb.append("\t");
+		sb.append(thread.getState());
+		sb.append("\t");
+		sb.append(date);
+		sb.append("\n");
+		fileWriter.append(sb.toString());
+		for (StackTraceElement element : entry.getValue()) {
+            fileWriter.append(element.toString());
+            fileWriter.append("\n");
+        }
+		fileWriter.flushAppend();
+	}
+
 }

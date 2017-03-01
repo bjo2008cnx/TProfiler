@@ -6,7 +6,7 @@ public class InnerSocketThreadTest {
 
     @Test
     public void testRun() throws Exception {
-        Thread t =  new InnerSocketThread();
+        InnerSocketThread t =  new InnerSocketThread();
         t.start();
     }
 }
