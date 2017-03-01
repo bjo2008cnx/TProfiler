@@ -1,18 +1,18 @@
-package org.light.testing;
+package common;
 
 /**
  * @author Michael.Wang
  * @date 2017/2/27
  */
-    public class TestMain {
+public class TestMain {
 
-        public static void main(String[] args) throws InterruptedException {
-            TestMain testMain = new TestMain();
-            testMain.test3();
-            while (true) {
-                testMain.test();
-            }
+    public static void main(String[] args) throws InterruptedException {
+        TestMain testMain = new TestMain();
+        testMain.test3();
+        while (true) {
+            testMain.test();
         }
+    }
 
     public void test() throws InterruptedException {
         Thread.sleep(1000);
