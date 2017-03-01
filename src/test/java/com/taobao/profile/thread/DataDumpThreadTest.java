@@ -1,7 +1,10 @@
 package com.taobao.profile.thread;
 
 import com.taobao.profile.config.ProfConfig;
+import junit.framework.Assert;
 import org.junit.Test;
+
+import java.io.File;
 
 public class DataDumpThreadTest {
 
@@ -11,5 +14,9 @@ public class DataDumpThreadTest {
         config.setDebugMode(true);
         Thread t = new DataDumpThread(config);
         t.start();
+        Thread.sleep(2000);
+        File file = new File(System.getProperty("user.home"), "/logs/tprofiler.log" );
+        Assert.assertNotNull(file);
+        Assert.assertTrue(file.exists());
     }
 }

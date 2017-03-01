@@ -7,24 +7,25 @@ package org.light.testing;
     public class TestMain {
 
         public static void main(String[] args) throws InterruptedException {
-            test3();
+            TestMain testMain = new TestMain();
+            testMain.test3();
             while (true) {
-                test();
+                testMain.test();
             }
         }
 
-    public static void test() throws InterruptedException {
+    public void test() throws InterruptedException {
         Thread.sleep(1000);
         System.out.println("test");
-        test2();
+        new TestMain().test2();
     }
 
-    public static void test2() throws InterruptedException {
+    public void test2() throws InterruptedException {
         Thread.sleep(2000);
         System.out.println("test2");
     }
 
-    public static void test3() throws InterruptedException {
+    public void test3() throws InterruptedException {
         Thread.sleep(1000);
         System.out.println("test3");
     }

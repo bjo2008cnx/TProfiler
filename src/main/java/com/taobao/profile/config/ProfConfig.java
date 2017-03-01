@@ -8,17 +8,10 @@
  */
 package com.taobao.profile.config;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
-
 import com.taobao.profile.utils.VariableNotFoundException;
+
+import java.io.*;
+import java.util.Properties;
 
 /**
  * 读取并保存配置
@@ -134,7 +127,7 @@ public class ProfConfig {
 	   * 4. 默认jar包中的profile.properties
 	   */
 	  String specifiedConfigFileName = System.getProperty(CONFIG_FILE_NAME);
-	  File configFiles[] = {
+	  File[] configFiles = {
 			  specifiedConfigFileName == null ? null : new File(specifiedConfigFileName), 
 					  new File(CONFIG_FILE_NAME), 
 					  DEFAULT_PROFILE_PATH

@@ -8,13 +8,12 @@
  */
 package com.taobao.profile.thread;
 
-import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
-
 import com.taobao.profile.Manager;
 import com.taobao.profile.Profiler;
 import com.taobao.profile.config.ProfConfig;
 import com.taobao.profile.runtime.MethodCache;
+
+import java.util.Calendar;
 
 /**
  * 开始时间结束时间控制线程
@@ -61,6 +60,7 @@ public class TimeControlThread extends Thread {
 
 	/**
 	 * @param time
+	 * 下次启动时间（后一天）
 	 * @return
 	 */
 	public long nextStartTime(InnerControlTime time) {
@@ -75,6 +75,7 @@ public class TimeControlThread extends Thread {
 	}
 
 	/**
+	 * wait指定的时间
 	 * @param time
 	 */
 	private void await(long time) {
@@ -100,16 +101,19 @@ public class TimeControlThread extends Thread {
 		while (true) {
 			long time = waitTime(startTime);
 			if (time > 0) {
-				await(time);
+				await(time); //未到开始时间，等待
 			} else {
+				//已过开始时间，比较结束时间
 				time = waitTime(endTime);
 				if (time > 0) {
+					//未到结束时间
 					Profiler.clearData();
 					Manager.instance().setTimeFlag(true);
-					await(time);
+					await(time); //等待结束
 					Manager.instance().setTimeFlag(false);
-					MethodCache.flushMethodData();
+					MethodCache.flushMethodData(); //结束之后flush
 				} else {
+					//已过结束时间，等待下次启动
 					time = nextStartTime(startTime);
 					await(time);
 				}
