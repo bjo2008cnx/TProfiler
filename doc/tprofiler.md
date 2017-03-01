@@ -14,11 +14,12 @@ tprofiler是taobao开源的也是国内目前为止唯一一款Profiler工具，
 ProfilerLogAnalysis <tprofiler.log path> <tmethod.log path> <topmethod.log path> <topobject.log path>
 ```
 
-该类分析了以下文件：
-tprofiler.log:
-tmethod.log:
-topmethod.log:
-topobjects.log:
+该类分析了以下文件：(以下文件名在profile.properties定义，完整路径为${user.home}/logs/)
+tprofiler.log: 性能分析数据，由DataDumpThread输出
+tmethod.log: 方法相关数据，由TimeControlThread或InnerSocketThread线程调用MethodCache.flushMethodData()输出
+topmethod.log: top方法相关数据，由ProfilerLogAnalysis输出
+topobjects.log: top对象相关数据，由ProfilerLogAnalysis输出
+mysqlProfiler.log: 由DataDumpThread输出
 
 ###3. instrument包：修改字节码
 这个是字节码注入的比较核心的包，也是唯一稍微难度的地方
@@ -41,17 +42,10 @@ topobjects.log:
 ###6. client包：客户端
 * TProfileClient：TProfiler客户端,用来远程打开 关闭及查看状态
 
-<!--
-###dependence_query
-
-###runtime
--->
-
 
 ##代码量统计
-空行：2357
-注释行：1420
-代码行：468
-
+|路径| 总行数 | 空行 | 注释行 | 代码行 |
+| -- | ------ |----- | -----  |--------|
+|\TProfiler\src\main\java|4247|470|1420|2357|
 
 
