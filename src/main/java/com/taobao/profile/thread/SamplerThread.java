@@ -53,8 +53,7 @@ public class SamplerThread extends Thread {
 		try {
 			while (true) {
 				dumpMethod();
-				// sleep
-				TimeUnit.SECONDS.sleep(samplerIntervalTime);
+				TimeUnit.SECONDS.sleep(samplerIntervalTime); // sleep
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
