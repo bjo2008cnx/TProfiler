@@ -102,13 +102,13 @@ public class DataDumpThread extends Thread {
      * @return
      */
     private void dumpProfileData() {
-        ThreadData[] threadData = Profiler.threadDatas;
-        for (int index = 0; index < threadData.length; index++) {
-            ThreadData profilerData = threadData[index];
-            if (profilerData == null) {
+        ThreadData[] threadDatas = Profiler.threadDatas;
+        for (int index = 0; index < threadDatas.length; index++) {
+            ThreadData threadData = threadDatas[index];
+            if (threadData == null) {
                 continue;
             }
-            ProfStack<long[]> profile = profilerData.profileData;
+            ProfStack<long[]> profile = threadData.profileData;
             while (profile.size() > 0) {
                 long[] data = profile.pop();
                 StringBuilder sb = new StringBuilder();
@@ -127,7 +127,7 @@ public class DataDumpThread extends Thread {
                 fileWriter.append(sb.toString());
             }
             fileWriter.flushAppend();
-            profilerData.clear();
+            threadData.clear();
         }
         fileWriter.append("=\n");
         fileWriter.flushAppend();
