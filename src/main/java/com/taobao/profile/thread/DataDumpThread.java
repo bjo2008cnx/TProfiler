@@ -102,7 +102,7 @@ public class DataDumpThread extends Thread {
      * @return
      */
     private void dumpProfileData() {
-        ThreadData[] threadData = Profiler.threadProfile;
+        ThreadData[] threadData = Profiler.threadDatas;
         for (int index = 0; index < threadData.length; index++) {
             ThreadData profilerData = threadData[index];
             if (profilerData == null) {
