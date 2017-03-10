@@ -8,11 +8,11 @@
  */
 package com.taobao.profile.runtime;
 
-import java.util.Vector;
-
 import com.taobao.profile.Manager;
 import com.taobao.profile.Profiler;
 import com.taobao.profile.utils.DailyRollingFileWriter;
+
+import java.util.Vector;
 
 /**
  * 方法名缓存,用ID代替方法名进行剖析,提升性能
@@ -63,9 +63,10 @@ public class MethodCache {
 	 * @param fileName
 	 * @param className
 	 * @param methodName
-	 */
+	*/
 	public synchronized static void UpdateMethodName(int id, String fileName, String className, String methodName) {
 		MethodInfo methodInfo = mCacheMethods.get(id);
+		methodInfo.setId(id);
 		methodInfo.setMFileName(fileName);
 		methodInfo.setMClassName(className);
 		methodInfo.setMMethodName(methodName);

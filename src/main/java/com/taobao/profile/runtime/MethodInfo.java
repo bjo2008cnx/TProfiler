@@ -16,6 +16,8 @@ package com.taobao.profile.runtime;
  */
 public class MethodInfo {
 
+	private int id;
+
 	/**
 	 * 类名
 	 */
@@ -96,4 +98,11 @@ public class MethodInfo {
 		mLineNum = lineNum;
 	}
 
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }
