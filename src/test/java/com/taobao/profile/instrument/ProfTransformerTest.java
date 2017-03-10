@@ -2,10 +2,12 @@ package com.taobao.profile.instrument;
 
 import com.taobao.profile.Manager;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.FileInputStream;
 
+@Ignore
 public class ProfTransformerTest {
 
     @Test

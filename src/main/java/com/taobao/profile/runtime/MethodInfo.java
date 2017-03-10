@@ -16,7 +16,7 @@ package com.taobao.profile.runtime;
  */
 public class MethodInfo {
 
-	private int id;
+	private int mId;
 
 	/**
 	 * 类名
@@ -39,7 +39,7 @@ public class MethodInfo {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
-		return id+":"+mClassName + ":" + mMethodName + ":" + mLineNum;
+		return mId+":"+mClassName + ":" + mMethodName + ":" + mLineNum;
 	}
 
 	/**
@@ -98,11 +98,12 @@ public class MethodInfo {
 		mLineNum = lineNum;
 	}
 
-	public int getId() {
-		return id;
+
+	public int getMId() {
+		return mId;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public void setMId(int mId) {
+		this.mId = mId;
 	}
 }

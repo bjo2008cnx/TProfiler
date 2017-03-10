@@ -2,8 +2,10 @@ package com.taobao.profile.thread;
 
 import com.taobao.profile.Manager;
 import com.taobao.profile.config.ProfConfig;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class TimeControlThreadTest {
     public static void main(String[] args) throws Exception {
         new TimeControlThreadTest(). testRun();
