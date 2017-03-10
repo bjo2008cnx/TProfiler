@@ -39,7 +39,7 @@ public class MethodInfo {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
-		return mClassName + ":" + mMethodName + ":" + mLineNum;
+		return id+":"+mClassName + ":" + mMethodName + ":" + mLineNum;
 	}
 
 	/**
