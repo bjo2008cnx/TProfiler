@@ -32,22 +32,6 @@ public class Manager {
      */
     public static int PORT;
     /**
-     * 开始命令
-     */
-    public static final String START = "start";
-    /**
-     * 结束命令
-     */
-    public static final String STOP = "stop";
-    /**
-     * 获取状态命令
-     */
-    public static final String STATUS = "status";
-    /**
-     * 远程刷出方法数据
-     */
-    public static final String FLUSHMETHOD = "flushmethod";
-    /**
      * 是否用纳秒采集
      */
     private static boolean NEED_NANO_TIME;

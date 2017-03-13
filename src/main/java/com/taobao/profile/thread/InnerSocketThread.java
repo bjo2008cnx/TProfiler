@@ -8,17 +8,14 @@
  */
 package com.taobao.profile.thread;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.taobao.profile.Manager;
+import com.taobao.profile.ProfilerConstant;
+import com.taobao.profile.runtime.MethodCache;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-
-import com.taobao.profile.Manager;
-import com.taobao.profile.runtime.MethodCache;
 
 /**
  * 对外提供Socket开关
@@ -47,11 +44,11 @@ public class InnerSocketThread extends Thread {
 
 				String command = read(child.getInputStream());
 
-				if (Manager.START.equals(command)) {
+				if (ProfilerConstant.START.equals(command)) {
 					Manager.instance().setSwitchFlag(true);
-				} else if (Manager.STATUS.equals(command)) {
+				} else if (ProfilerConstant.STATUS.equals(command)) {
 					write(child.getOutputStream());
-				} else if (Manager.FLUSHMETHOD.equals(command)) {
+				} else if (ProfilerConstant.FLUSHMETHOD.equals(command)) {
 					MethodCache.flushMethodData();
 				} else {
 					Manager.instance().setSwitchFlag(false);

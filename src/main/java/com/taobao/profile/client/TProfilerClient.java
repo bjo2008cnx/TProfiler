@@ -16,7 +16,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import com.taobao.profile.Manager;
+import com.taobao.profile.ProfilerConstant;
 
 /**
  * TProfiler客户端,用来远程打开 关闭及查看状态
@@ -33,7 +33,7 @@ public class TProfilerClient {
      * @param port
      */
 	public static void start(String server, int port) {
-		doSend(Manager.START, server, port);
+		doSend(ProfilerConstant.START, server, port);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class TProfilerClient {
      * @param port
      */
 	public static void stop(String server, int port) {
-		doSend(Manager.STOP, server, port);
+		doSend(ProfilerConstant.STOP, server, port);
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class TProfilerClient {
      * @return
      */
 	public static String status(String server, int port) {
-		return getStatus(Manager.STATUS, server, port);
+		return getStatus(ProfilerConstant.STATUS, server, port);
 	}
 
 	/**
@@ -64,7 +64,7 @@ public class TProfilerClient {
      * @param port
      */
 	public static void flushMethod(String server, int port) {
-		doSend(Manager.FLUSHMETHOD, server, port);
+		doSend(ProfilerConstant.FLUSHMETHOD, server, port);
 	}
 
 	/**
@@ -163,11 +163,11 @@ public class TProfilerClient {
 			return;
 		}
         int port = Integer.valueOf(args[1]);
-		if (args[2].toLowerCase().equals(Manager.START)) {
+		if (args[2].toLowerCase().equals(ProfilerConstant.START)) {
 			start(args[0], port);
-		} else if (args[2].toLowerCase().equals(Manager.STOP)) {
+		} else if (args[2].toLowerCase().equals(ProfilerConstant.STOP)) {
 			stop(args[0], port);
-		} else if (args[2].toLowerCase().equals(Manager.FLUSHMETHOD)) {
+		} else if (args[2].toLowerCase().equals(ProfilerConstant.FLUSHMETHOD)) {
 			flushMethod(args[0], port);
 		} else {
 			System.out.println(status(args[0], port));
