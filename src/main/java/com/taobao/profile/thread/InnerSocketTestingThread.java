@@ -1,0 +1,122 @@
+/**
+ * (C) 2011-2012 Alibaba Group Holding Limited.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ * 
+ */
+package com.taobao.profile.thread;
+
+import com.taobao.profile.Manager;
+import com.taobao.profile.ProfilerConstant;
+import com.taobao.profile.runtime.MethodCache;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+
+/**
+ * 对外提供Socket开关, 增加testId
+ * 
+ * @author shutong.dy
+ * @since 2012-1-11
+ */
+public class InnerSocketTestingThread extends Thread {
+	/**
+	 * server
+	 */
+	private ServerSocket socket;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Thread#run()
+	 */
+	public void run() {
+		try {
+			socket = new ServerSocket(Manager.PORT);
+			while (true) {
+				Socket child = socket.accept();
+
+				child.setSoTimeout(5000);
+
+				String command = read(child.getInputStream());
+
+				if (ProfilerConstant.START.equals(command)) {
+					Manager.instance().setSwitchFlag(true);
+				} else if (ProfilerConstant.STATUS.equals(command)) {
+					write(child.getOutputStream());
+				} else if (ProfilerConstant.FLUSHMETHOD.equals(command)) {
+					MethodCache.flushMethodData();
+				} else {
+					Manager.instance().setSwitchFlag(false);
+				}
+				child.close();
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (socket != null) {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	/**
+	 * 读取输入流
+	 * 
+	 * @param in
+	 * @return
+	 * @throws java.io.IOException
+	 */
+	private String read(InputStream in) throws IOException {
+		BufferedInputStream bin = new BufferedInputStream(in);
+		StringBuffer sb = new StringBuffer();
+        int i;
+		while ((i = bin.read()) != -1) {
+			char c = (char) i;
+			if (c == '\r') {
+				break;
+			} else {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 输出状态
+	 * 
+	 * @param os
+	 * @throws java.io.IOException
+	 */
+	private void write(OutputStream os) throws IOException {
+		BufferedOutputStream out = new BufferedOutputStream(os);
+		if (Manager.instance().getSwitchFlag()) {
+			out.write("running".getBytes());
+		} else {
+			out.write("stop".getBytes());
+		}
+		out.write('\r');
+		out.flush();
+	}
+
+    /**
+     * 调试使用
+     *
+     * @param args
+     */
+    public static void main(String[] args){
+        InnerSocketThread socketThread = new InnerSocketThread();
+        socketThread.setName("TProfiler-InnerSocket-Debug");
+        socketThread.start();
+    }
+}
