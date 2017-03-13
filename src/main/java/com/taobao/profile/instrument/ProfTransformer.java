@@ -46,7 +46,8 @@ public class ProfTransformer implements ClassFileTransformer {
 			}
 
 			if (Manager.instance().isDebugMode()) {
-				System.out.println(" ---- TProfiler Debug: ClassLoader:" + loader + " ---- class: " + className+"  by mysqASM");
+				//System.out.println(" ---- TProfiler Debug: ClassLoader:" + loader + " ---- class: " + className+"  by mysqASM");
+				System.out.println(" ---- TProfiler Debug: ClassLoader: ---- class: " + className+"  by mysqASM");
 			}
 
 			// 记录注入类数
@@ -87,7 +88,7 @@ public class ProfTransformer implements ClassFileTransformer {
 			return classfileBuffer;
 		}
 		if (Manager.instance().isDebugMode()) {
-			System.out.println(" ---- TProfiler Debug: ClassLoader:" + loader + " ---- class: " + className);
+			System.out.println(" ---- TProfiler Debug: ClassLoader:"  + " ---- class: " + className);
 		}
 
 		// 记录注入类数

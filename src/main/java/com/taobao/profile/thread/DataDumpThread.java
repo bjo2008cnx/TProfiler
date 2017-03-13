@@ -16,6 +16,8 @@ import com.taobao.profile.dependence_query.SlowQueryData;
 import com.taobao.profile.runtime.ProfStack;
 import com.taobao.profile.runtime.ThreadData;
 import com.taobao.profile.utils.DailyRollingFileWriter;
+import lombok.extern.slf4j.Slf4j;
+import org.lightfw.util.thread.ThreadUtil;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
  * @author shutong.dy
  * @since 2012-1-11
  */
+@Slf4j
 public class DataDumpThread extends Thread {
     /**
      * log writer
@@ -71,27 +74,20 @@ public class DataDumpThread extends Thread {
                     Manager.instance().setProfileFlag(true);
                     TimeUnit.SECONDS.sleep(eachProfUseTime);
                     Manager.instance().setProfileFlag(false);
-                    // 等待已开始的End方法执行完成
-                    TimeUnit.MILLISECONDS.sleep(500L);
-
+                    ThreadUtil.sleep(500);  // 等待已开始的End方法执行完成
                     dumpProfileData();
                     dumpMysqlData();
                 }
                 TimeUnit.SECONDS.sleep(eachProfIntervalTime);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error", e);
         } finally {
             Manager.instance().setProfileFlag(false);
             if (fileWriter != null) {
                 fileWriter.closeFile();
             }
-            // 等待已开始的End方法执行完成
-            try {
-                TimeUnit.MILLISECONDS.sleep(500L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            ThreadUtil.sleep(500); // 等待已开始的End方法执行完成
             Profiler.clearData();
         }
     }
@@ -112,18 +108,10 @@ public class DataDumpThread extends Thread {
             while (profile.size() > 0) {
                 long[] data = profile.pop();
                 StringBuilder sb = new StringBuilder();
-                // thread id
-                sb.append(index);
-                sb.append('\t');
-                // stack number
-                sb.append(data[1]);
-                sb.append('\t');
-                // method id
-                sb.append(data[0]);
-                sb.append('\t');
-                // use time
-                sb.append(data[2]);
-                sb.append('\n');
+                sb.append(index).append('\t');  // thread id
+                sb.append(data[1]).append('\t');  // stack number
+                sb.append(data[0]).append('\t'); // method id
+                sb.append(data[2]).append('\n'); // use time
                 fileWriter.append(sb.toString());
             }
             fileWriter.flushAppend();

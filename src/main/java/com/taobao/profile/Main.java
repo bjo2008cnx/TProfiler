@@ -8,9 +8,9 @@
  */
 package com.taobao.profile;
 
-import java.lang.instrument.Instrumentation;
-
 import com.taobao.profile.instrument.ProfTransformer;
+
+import java.lang.instrument.Instrumentation;
 
 /**
  * TProfiler入口
@@ -25,6 +25,7 @@ public class Main {
 	 * @param inst
 	 */
 	public static void premain(String args, Instrumentation inst) {
+		System.out.println("agent class is starting.......");
 		Manager.instance().initialization();
 		inst.addTransformer(new ProfTransformer());
 		Manager.instance().startupThread();
