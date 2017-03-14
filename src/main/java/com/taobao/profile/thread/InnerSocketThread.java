@@ -11,8 +11,8 @@ package com.taobao.profile.thread;
 import com.taobao.profile.Manager;
 import com.taobao.profile.ProfilerConstant;
 import com.taobao.profile.runtime.MethodCache;
+import com.taobao.profile.utils.StreamUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.lightfw.util.io.common.StreamUtil;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;

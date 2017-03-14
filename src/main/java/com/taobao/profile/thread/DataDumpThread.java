@@ -16,8 +16,8 @@ import com.taobao.profile.dependence_query.SlowQueryData;
 import com.taobao.profile.runtime.ProfStack;
 import com.taobao.profile.runtime.ThreadData;
 import com.taobao.profile.utils.DailyRollingFileWriter;
+import com.taobao.profile.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.lightfw.util.thread.ThreadUtil;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -70,14 +70,7 @@ public class DataDumpThread extends Thread {
     public void run() {
         try {
             while (true) {
-                if (Manager.instance().canDump()) {
-                    Manager.instance().setProfileFlag(true);
-                    TimeUnit.SECONDS.sleep(eachProfUseTime);
-                    Manager.instance().setProfileFlag(false);
-                    ThreadUtil.sleep(500);  // 等待已开始的End方法执行完成
-                    dumpProfileData();
-                    dumpMysqlData();
-                }
+                dump();
                 TimeUnit.SECONDS.sleep(eachProfIntervalTime);
             }
         } catch (Exception e) {
@@ -89,6 +82,17 @@ public class DataDumpThread extends Thread {
             }
             ThreadUtil.sleep(500); // 等待已开始的End方法执行完成
             Profiler.clearData();
+        }
+    }
+
+    private void dump() throws InterruptedException {
+        if (Manager.instance().canDump()) {
+            Manager.instance().setProfileFlag(true);
+            TimeUnit.SECONDS.sleep(eachProfUseTime);
+            Manager.instance().setProfileFlag(false);
+            ThreadUtil.sleep(500);  // 等待已开始的End方法执行完成
+            dumpProfileData();
+            dumpMysqlData();
         }
     }
 
