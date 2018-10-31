@@ -11,6 +11,8 @@ package com.taobao.profile;
 import com.taobao.profile.dependence_query.RecordSlowQuery;
 import com.taobao.profile.dependence_query.SlowQueryData;
 import com.taobao.profile.runtime.ThreadData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2010-6-23
  */
 public class Profiler {
+    private static Logger log = LoggerFactory.getLogger(Profiler.class);
     /**
      * 注入类数
      */
@@ -32,16 +35,16 @@ public class Profiler {
      */
     public static AtomicInteger instrumentMethodCount = new AtomicInteger(0);
 
-    private final static int size = 65535; //最大65535个线程
+    private final static int size = 65535;
     /**
      * 线程数组
      */
-    public static ThreadData[] threadDatas = new ThreadData[size];
+    public static ThreadData[] threadDataArray = new ThreadData[size];
 
     /**
      * 记录慢日志的数组
      */
-    public static SlowQueryData[] slowQueryProfile = new SlowQueryData[size];
+    public static SlowQueryData[] slowQueryDataArray = new SlowQueryData[size];
 
     /**
      * 方法开始时调用,采集开始时间
@@ -49,31 +52,35 @@ public class Profiler {
      * @param methodId
      */
     public static void Start(int methodId) {
+        //log.debug("call 'Start'");
         if (!Manager.instance().canProfile()) {
+            //log.warn("Manager.instance().canProfile() is false.Can't start profiling.");
             return;
         }
-        int currentThreadId = (int) Thread.currentThread().getId();
-        if (currentThreadId >= size) {
+        long threadId = Thread.currentThread().getId();
+        if (threadId >= size) {
+            log.warn("threadId >= size is true ");
             return;
         }
 
         long startTime = Manager.isNeedNanoTime() ? System.nanoTime() : System.currentTimeMillis();
 
         try {
-            ThreadData currentThreadData = threadDatas[currentThreadId];
-            if (currentThreadData == null) {
-                currentThreadData = new ThreadData();
-                threadDatas[currentThreadId] = currentThreadData;
+            //采集线程数据
+            ThreadData threadData = threadDataArray[(int) threadId];
+            if (threadData == null) {
+                threadData = new ThreadData();
+                threadDataArray[(int) threadId] = threadData;
             }
 
             long[] frameData = new long[3];
             frameData[0] = methodId;
-            frameData[1] = currentThreadData.stackNum;
+            frameData[1] = threadData.stackNum;
             frameData[2] = startTime;
-            currentThreadData.stackFrame.push(frameData);
-            currentThreadData.stackNum++;
+            threadData.stackFrame.push(frameData);
+            threadData.stackNum++;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("fail to call Start.",e);
         }
     }
 
@@ -83,22 +90,20 @@ public class Profiler {
      * @param methodId
      */
     public static void End(int methodId) {
+        //log.debug("call 'End'");
         if (!Manager.instance().canProfile()) {
+            //log.warn("canProfile is false");
             return;
         }
         long threadId = Thread.currentThread().getId();
         if (threadId >= size) {
+            log.warn("threadId is bigger thean buffer size.");
             return;
         }
 
-        long endTime;
-        if (Manager.isNeedNanoTime()) {
-            endTime = System.nanoTime();
-        } else {
-            endTime = System.currentTimeMillis();
-        }
+        long endTime = Manager.isNeedNanoTime() ? System.nanoTime() : System.currentTimeMillis();
         try {
-            ThreadData thrData = threadDatas[(int) threadId];
+            ThreadData thrData = threadDataArray[(int) threadId];
             if (thrData == null || thrData.stackNum <= 0 || thrData.stackFrame.size() == 0) {
                 // 没有执行start,直接执行end/可能是异步停止导致的
                 return;
@@ -131,16 +136,16 @@ public class Profiler {
     }
 
     public static void clearData() {
-        for (int index = 0; index < threadDatas.length; index++) {
-            ThreadData profilerData = threadDatas[index];
+        for (int index = 0; index < threadDataArray.length; index++) {
+            ThreadData profilerData = threadDataArray[index];
             if (profilerData == null) {
                 continue;
             }
             profilerData.clear();
         }
 
-        for (int index = 0; index < slowQueryProfile.length; index++) {
-            SlowQueryData profilerData = slowQueryProfile[index];
+        for (int index = 0; index < slowQueryDataArray.length; index++) {
+            SlowQueryData profilerData = slowQueryDataArray[index];
             if (profilerData == null) {
                 continue;
             }
@@ -188,10 +193,10 @@ public class Profiler {
      * @return
      */
     private static SlowQueryData getThreadData(long threadId) {
-        SlowQueryData thrData = slowQueryProfile[(int) threadId];
+        SlowQueryData thrData = slowQueryDataArray[(int) threadId];
         if (thrData == null) {
             thrData = new SlowQueryData();
-            slowQueryProfile[(int) threadId] = thrData;
+            slowQueryDataArray[(int) threadId] = thrData;
         }
         return thrData;
     }

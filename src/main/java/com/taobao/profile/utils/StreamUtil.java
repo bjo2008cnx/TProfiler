@@ -1,17 +1,18 @@
 package com.taobao.profile.utils;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 
 /**
  * 流工具类
  *
- * @author Wangxm
+ * @author Michael.Wang
  */
-@Slf4j
 public class StreamUtil {
 
+    private static Logger log = LoggerFactory.getLogger(StreamUtil.class);
     /**
      * 通用的关闭方法
      *
@@ -20,6 +21,7 @@ public class StreamUtil {
     public static void close(final Closeable... closeables) {
         closeQuietly(closeables);
     }
+
 
     /**
      * 通用的关闭方法
@@ -108,7 +110,7 @@ public class StreamUtil {
      *
      * @param content
      * @param os
-     * @throws java.io.IOException
+     * @throws IOException
      */
     public static void write2Stream(String content, OutputStream os) throws IOException {
         BufferedOutputStream out = new BufferedOutputStream(os);

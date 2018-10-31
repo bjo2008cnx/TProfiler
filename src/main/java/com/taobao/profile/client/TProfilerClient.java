@@ -16,7 +16,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import com.taobao.profile.ProfilerConstant;
 
 /**
  * TProfiler客户端,用来远程打开 关闭及查看状态
@@ -158,7 +157,7 @@ public class TProfilerClient {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if (args.length != 3) {
+		if (args.length < 3) {
 			System.err.println("Usage: <server ip> <server port> <command[start/stop/status/flushmethod]>");
 			return;
 		}

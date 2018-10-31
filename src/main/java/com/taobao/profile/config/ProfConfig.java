@@ -9,6 +9,7 @@
 package com.taobao.profile.config;
 
 import com.taobao.profile.utils.VariableNotFoundException;
+import lombok.Data;
 
 import java.io.*;
 import java.util.Properties;
@@ -19,8 +20,10 @@ import java.util.Properties;
  * @author xiaodu
  * @since 2010-6-22
  */
+@Data
 public class ProfConfig {
 
+    public static final String TRUE = "true";
     /**
      * 配置文件名
      */
@@ -31,15 +34,8 @@ public class ProfConfig {
      */
     private File DEFAULT_PROFILE_PATH = new File(System.getProperty("user.home"), "/.tprofiler/" + CONFIG_FILE_NAME);
 
-    public boolean isAutoProfiling() {
-        return isAutoProfiling;
-    }
 
-    public void setAutoProfiling(boolean isAutoProfiling) {
-        this.isAutoProfiling = isAutoProfiling;
-    }
-
-    private boolean isAutoProfiling = false;
+    private String logPath;
 
     /**
      * 开始profile时间
@@ -121,22 +117,37 @@ public class ProfConfig {
      */
     private int recordTime;
 
+    private static ProfConfig instance = null;
+
+    public static ProfConfig getInstance(){
+        boolean debug = TRUE.equalsIgnoreCase(System.getProperty("tprofiler.debug"));
+        if (debug){
+            System.out.println("init instance.");
+        }
+        synchronized (ProfConfig.class){
+            if (instance == null){
+                instance = new ProfConfig();
+            }
+        }
+        return instance;
+    }
+
     /**
      * 构造方法
      */
     public ProfConfig() {
 
         //此时配置文件中的debug参数还未读取，因此使用-Dtprofiler.debug=true来读取，用于开发时调试
-        boolean debug = "true".equalsIgnoreCase(System.getProperty("tprofiler.debug"));
+        boolean debug = TRUE.equalsIgnoreCase(System.getProperty("tprofiler.debug"));
       /*
-	   * 查找顺序：
+       * 查找顺序：
 	   * 1. 系统参数-Dprofile.properties=/path/profile.properties
 	   * 2. 当前文件夹下的profile.properties
 	   * 3. 用户文件夹~/.tprofiler/profile.properties，如：/home/manlge/.tprofiler/profile.properties
 	   * 4. 默认jar包中的profile.properties
 	   */
         String specifiedConfigFileName = System.getProperty(CONFIG_FILE_NAME);
-        File[] configFiles = {specifiedConfigFileName == null ? null : new File(specifiedConfigFileName), new File(CONFIG_FILE_NAME), DEFAULT_PROFILE_PATH};
+        File configFiles[] = {specifiedConfigFileName == null ? null : new File(specifiedConfigFileName), new File(CONFIG_FILE_NAME), DEFAULT_PROFILE_PATH};
 
         for (File file : configFiles) {
             if (file != null && file.exists() && file.isFile()) {
@@ -157,7 +168,6 @@ public class ProfConfig {
         } catch (IOException e) {
             throw new RuntimeException("error load config file " + DEFAULT_PROFILE_PATH, e);
         }
-
     }
 
     /**
@@ -166,7 +176,7 @@ public class ProfConfig {
      * @throws IOException
      */
     private void extractDefaultProfile() throws IOException {
-	  /*
+      /*
 	   * 这里采用stream进行复制，而不是采用properties.load和save，主要原因为以下2点：
 	   * 1. 性能，stream直接复制快，没有properties解析过程(不过文件较小，解析开销可以忽略)
 	   * 2. properties会造成注释丢失，该文件作为模板提供给用户，包含注释信息
@@ -233,9 +243,10 @@ public class ProfConfig {
         String debugMode = properties.getProperty("debugMode");
         String port = properties.getProperty("port");
         String recordTime = properties.getProperty("recordTime", "-1");
+        String logPath = properties.getProperty("logPath");
 
         setPort(port == null ? 50000 : Integer.valueOf(port));
-        setDebugMode("true".equalsIgnoreCase(debugMode == null ? null : debugMode.trim()));
+        setDebugMode(TRUE.equalsIgnoreCase(debugMode == null ? null : debugMode.trim()));
         setExcludeClassLoader(excludeClassLoader);
         setExcludePackageStartsWith(excludePackageStartsWith);
         setEndProfTime(endProfTime);
@@ -244,242 +255,13 @@ public class ProfConfig {
         setMethodFilePath(methodFilePath);
         setSamplerFilePath(samplerFilePath);
         setStartProfTime(startProfTime);
-        setNeedNanoTime("true".equals(needNanoTime));
-        setIgnoreGetSetMethod("true".equals(ignoreGetSetMethod));
-        if (eachProfUseTime == null) {
-            setEachProfUseTime(5);
-        } else {
-            setEachProfUseTime(Integer.valueOf(eachProfUseTime.trim()));
-        }
-        if (eachProfIntervalTime == null) {
-            setEachProfIntervalTime(50);
-        } else {
-            setEachProfIntervalTime(Integer.valueOf(eachProfIntervalTime.trim()));
-        }
-        if (samplerIntervalTime == null) {
-            setSamplerIntervalTime(10);
-        } else {
-            setSamplerIntervalTime(Integer.valueOf(samplerIntervalTime.trim()));
-        }
-
-        if (recordTime == null) {
-            setRecordTime(-1);
-        } else {
-            setRecordTime(Integer.valueOf(recordTime));
-        }
-
+        setNeedNanoTime(TRUE.equals(needNanoTime));
+        setIgnoreGetSetMethod(TRUE.equals(ignoreGetSetMethod));
+        setEachProfUseTime(eachProfUseTime == null ? 5 : Integer.valueOf(eachProfUseTime.trim()));
+        setEachProfIntervalTime(eachProfIntervalTime == null ? 50 : Integer.valueOf(eachProfIntervalTime.trim()));
+        setSamplerIntervalTime(samplerIntervalTime == null ? 10 : Integer.valueOf(samplerIntervalTime.trim()));
+        setRecordTime(recordTime == null ? -1 : Integer.valueOf(recordTime));
+        setLogPath(logPath);
     }
 
-
-    /**
-     * @return
-     */
-    public String getStartProfTime() {
-        return startProfTime;
-    }
-
-    /**
-     * @param startProfTime
-     */
-    public void setStartProfTime(String startProfTime) {
-        this.startProfTime = startProfTime;
-    }
-
-    /**
-     * @return
-     */
-    public String getEndProfTime() {
-        return endProfTime;
-    }
-
-    /**
-     * @param endProfTime
-     */
-    public void setEndProfTime(String endProfTime) {
-        this.endProfTime = endProfTime;
-    }
-
-    /**
-     * @return
-     */
-    public String getLogFilePath() {
-        return logFilePath;
-    }
-
-    /**
-     * @param logFilePath
-     */
-    public void setLogFilePath(String logFilePath) {
-        this.logFilePath = logFilePath;
-    }
-
-    /**
-     * @return the methodFilePath
-     */
-    public String getMethodFilePath() {
-        return methodFilePath;
-    }
-
-    /**
-     * @param methodFilePath the methodFilePath to set
-     */
-    public void setMethodFilePath(String methodFilePath) {
-        this.methodFilePath = methodFilePath;
-    }
-
-    /**
-     * @return
-     */
-    public String getIncludePackageStartsWith() {
-        return includePackageStartsWith;
-    }
-
-    /**
-     * @param includePackageStartsWith
-     */
-    public void setIncludePackageStartsWith(String includePackageStartsWith) {
-        this.includePackageStartsWith = includePackageStartsWith;
-    }
-
-    /**
-     * @return
-     */
-    public int getEachProfUseTime() {
-        return eachProfUseTime;
-    }
-
-    /**
-     * @param eachProfUseTime
-     */
-    public void setEachProfUseTime(int eachProfUseTime) {
-        this.eachProfUseTime = eachProfUseTime;
-    }
-
-    /**
-     * @return
-     */
-    public int getEachProfIntervalTime() {
-        return eachProfIntervalTime;
-    }
-
-    /**
-     * @param eachProfIntervalTime
-     */
-    public void setEachProfIntervalTime(int eachProfIntervalTime) {
-        this.eachProfIntervalTime = eachProfIntervalTime;
-    }
-
-    /**
-     * @return
-     */
-    public String getExcludePackageStartsWith() {
-        return excludePackageStartsWith;
-    }
-
-    /**
-     * @param excludePackageStartsWith
-     */
-    public void setExcludePackageStartsWith(String excludePackageStartsWith) {
-        this.excludePackageStartsWith = excludePackageStartsWith;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isNeedNanoTime() {
-        return needNanoTime;
-    }
-
-    /**
-     * @param needNanoTime
-     */
-    public void setNeedNanoTime(boolean needNanoTime) {
-        this.needNanoTime = needNanoTime;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isIgnoreGetSetMethod() {
-        return ignoreGetSetMethod;
-    }
-
-    /**
-     * @param ignoreGetSetMethod
-     */
-    public void setIgnoreGetSetMethod(boolean ignoreGetSetMethod) {
-        this.ignoreGetSetMethod = ignoreGetSetMethod;
-    }
-
-    /**
-     * @param samplerFilePath the samplerFilePath to set
-     */
-    public void setSamplerFilePath(String samplerFilePath) {
-        this.samplerFilePath = samplerFilePath;
-    }
-
-    /**
-     * @param samplerIntervalTime the samplerIntervalTime to set
-     */
-    public void setSamplerIntervalTime(int samplerIntervalTime) {
-        this.samplerIntervalTime = samplerIntervalTime;
-    }
-
-    /**
-     * @return the samplerFilePath
-     */
-    public String getSamplerFilePath() {
-        return samplerFilePath;
-    }
-
-    /**
-     * @return the samplerIntervalTime
-     */
-    public int getSamplerIntervalTime() {
-        return samplerIntervalTime;
-    }
-
-    /**
-     * @return the excludeClassLoader
-     */
-    public String getExcludeClassLoader() {
-        return excludeClassLoader;
-    }
-
-    /**
-     * @param excludeClassLoader the excludeClassLoader to set
-     */
-    public void setExcludeClassLoader(String excludeClassLoader) {
-        this.excludeClassLoader = excludeClassLoader;
-    }
-
-    /**
-     * @return the debugMode
-     */
-    public boolean isDebugMode() {
-        return debugMode;
-    }
-
-    /**
-     * @param debugMode the debugMode to set
-     */
-    public void setDebugMode(boolean debugMode) {
-        this.debugMode = debugMode;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public int getRecordTime() {
-        return recordTime;
-    }
-
-    public void setRecordTime(int recordTime) {
-        this.recordTime = recordTime;
-    }
 }

@@ -1,261 +1,223 @@
-/**
- * (C) 2011-2012 Alibaba Group Holding Limited.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * version 2 as published by the Free Software Foundation.
- * 
- */
 package com.taobao.profile.analysis;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
+import com.taobao.profile.config.ProfConfig;
+import com.taobao.profile.runtime.MethodTime;
 import com.taobao.profile.utils.MathUtils;
+import com.taobao.profile.utils.StreamUtil;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.util.*;
 
 /**
- * 分析Profiler生成的Log
- * 
- * @author shutong.dy
- * @since 2012-1-11
+ * 分析Profiler生成的Log, 根据profiler.log和MethodCache,输出top Method及堆栈
+ *
+ * @since 2017-3-17
  */
 public class ProfilerLogAnalysis {
+    private static Logger log = LoggerFactory.getLogger(ProfilerLogAnalysis.class);
+    public static final String TOP_METHOD_LOG = "/topmethod.log";
 
-	private String logPath;
-	private String methodPath;
-	private boolean nano = false;
-	private long currentthreadId = -1;
-	private List<MethodStack> threadList = new ArrayList<MethodStack>();
-	private Map<Long, TimeSortData> cacheMethodMap = new HashMap<Long, TimeSortData>();
-	private Map<Long, String> methodIdMap = new HashMap<Long, String>();
+    private boolean nano = false;
+    private long currentThreadId = -1;
+    private List<MethodTime> methodTimes = new ArrayList<>();
+    private Map<Long, MethodTime> cachedMethodMap = new HashMap<>();
+    private Map<Long, String> methodIdMap = new HashMap<>();
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		if (args.length != 4) {
-			System.err.println("Usage: <tprofiler.log path> <tmethod.log path> <topmethod.log path> <topobject.log path>");
-			return;
-		}
-		ProfilerLogAnalysis analysis = new ProfilerLogAnalysis(args[0], args[1]);
-		analysis.reader();
-		analysis.printResult(args[2], args[3]);
-	}
+    public static void analyzeLog(String testId) {
+        log.info("Start to analyze log for test ", testId);
+        // 路径中增加testId
+        ProfConfig profConfig = ProfConfig.getInstance();
+        ProfilerLogAnalysis analysis = new ProfilerLogAnalysis();
+        analysis.read(profConfig.getLogFilePath(), profConfig.getMethodFilePath());
+        analysis.output(profConfig.getLogPath() + TOP_METHOD_LOG);
+        log.info("Analyzing log  ends. testId is :." + testId);
+    }
 
-	/**
-	 * @param inPath
-	 * @param methodPath
-	 */
-	public ProfilerLogAnalysis(String inPath, String methodPath) {
-		this.logPath = inPath;
-		this.methodPath = methodPath;
-	}
+    public static void analyze(final String testId) {
+        Runnable t = new Runnable() {
+            @Override
+            public void run() {
+                analyzeLog(testId);
+            }
+        };
+        new Thread(t).start();
+    }
 
-	/**
-	 * 取出结果,供分析程序调用
-	 * 
-	 * @return
-	 */
-	public List<TimeSortData> getTimeSortData() {
-		List<TimeSortData> list = new ArrayList<TimeSortData>();
-		list.addAll(cacheMethodMap.values());
-		Collections.sort(list);
-		return list;
-	}
+    /**
+     * 读取log,并解析
+     */
+    private void read(String tprofilerLogPath, String tmethodLogPath) {
+        BufferedReader reader = null;
+        try {
+            readMethodLog(tmethodLogPath);
+            String line;
+            log.info("tprofiler.log location is:" + tprofilerLogPath);
+            reader = new BufferedReader(new FileReader(tprofilerLogPath));
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("##")) {
+                    line = line.substring(line.indexOf(":") + 1, line.length());
+                    nano = line.equals("true");
+                    continue;
+                }
+                if ("=".equals(line)) {
+                    currentThreadId = -1;
+                    merge(this.methodTimes);
+                }
+                String[] data = line.split("\t");
+                if (data.length != 4) {
+                    continue;
+                }
+                long threadId = Long.parseLong(data[0]);
+                if (currentThreadId != threadId) {
+                    currentThreadId = threadId;
+                    merge(this.methodTimes);
+                }
+                MethodTime methodTime = new MethodTime();
+                methodTime.setStackNum(Long.parseLong(data[1]));
+                methodTime.setMethodId(Long.parseLong(data[2]));
+                methodTime.setUseTime(Long.parseLong(data[3]));
+                methodTime.setExecuteTimes(1);
+                methodTimes.add(methodTime);
+            }
+        } catch (FileNotFoundException e) {
+            log.error("Analyze error", e);
+        } catch (IOException e) {
+            log.error("Analyze error", e);
+        } finally {
+            StreamUtil.close(reader);
+            log.info("read tprofiler.log [end]. size is:" + methodTimes.size());
+        }
+        merge(this.methodTimes);
+    }
 
-	/**
-	 * 读取log,并解析
-	 */
-	private void reader() {
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(methodPath));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				if (line.startsWith("instrument")) {
-					continue;
-				}
-				String[] data = line.split(" ");
-				if (data.length != 2) {
-					continue;
-				}
-				methodIdMap.put(Long.parseLong(data[0]), String.valueOf(data[1]));
-			}
-			reader.close();
+    /**
+     * 读取tmethod.log
+     *
+     * @param methodPath
+     * @throws IOException
+     */
+    private void readMethodLog(String methodPath) {
+        log.info("read method log [start].  methodPath :" + methodPath);
+        BufferedReader methodLogReader = null;
+        try {
+            methodLogReader = new BufferedReader(new FileReader(methodPath));
+            String line;
+            while ((line = methodLogReader.readLine()) != null) {
+                if (line.startsWith("instrument")) {
+                    continue;
+                }
+                String[] data = line.split(" ");
+                if (data.length != 2|| StringUtils.isEmpty(data[0]) ||StringUtils.isEmpty(data[1])) {
+                    continue;
+                }
+                methodIdMap.put(Long.parseLong(data[0]), String.valueOf(data[1]));
+            }
+        } catch (IOException e) {
+            log.error("fail to read tmethod.log", e);
+        } finally {
+            StreamUtil.close(methodLogReader);
+            log.debug("methodIdMap size is:" + methodIdMap.size());
+            log.info("read method log  [end]" + methodPath);
+        }
+    }
 
-			reader = new BufferedReader(new FileReader(logPath));
-			line = null;
-			while ((line = reader.readLine()) != null) {
-				if (line.startsWith("##")) {
-					line = line.substring(line.indexOf(":") + 1, line.length());
-					if (line.equals("true")) {
-						nano = true;
-					} else {
-						nano = false;
-					}
-					continue;
-				}
-				if ("=".equals(line)) {
-					currentthreadId = -1;
-					doMerge();
-				}
-				String[] data = line.split("\t");
-				if (data.length != 4) {
-					continue;
-				}
-				merge(Long.parseLong(data[0]), Long.parseLong(data[1]), Long.parseLong(data[2]),
-						Long.parseLong(data[3]));
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		doMerge();
-	}
+    /**
+     * 合并数据
+     */
+    private void merge(List<MethodTime> methodTimeList) {
+        handleNetTime(methodTimeList);
+        sumMethodTime(methodTimeList);
+        methodTimeList.clear();
+    }
 
-	/**
-	 * 合并数据
-	 * 
-	 * @param threadid
-	 * @param stackNum
-	 * @param methodId
-	 * @param useTime
-	 */
-	private void merge(long threadid, long stackNum, long methodId, long useTime) {
-		if (currentthreadId != threadid) {
-			currentthreadId = threadid;
-			doMerge();
-		}
-		MethodStack m = new MethodStack();
-		m.methodId = methodId;
-		m.useTime = useTime;
-		m.stackNum = stackNum;
-		threadList.add(m);
-	}
+    /**
+     * 计算方法总耗时
+     *
+     * @param methodTimeList
+     */
+    private void sumMethodTime(List<MethodTime> methodTimeList) {
+        for (int i = 0; i < methodTimeList.size(); i++) {
+            MethodTime m = methodTimeList.get(i);
+            long methodId = m.getMethodId();
+            MethodTime methodTime = cachedMethodMap.get(methodId);
+            if (methodTime == null) {
+                methodTime = new MethodTime();
+                methodTime.setMethodId(methodId);
+                methodTime.setMethodName(methodIdMap.get(methodId));
+                methodTime.setExecuteTimes(1);
+                methodTime.sum(m);
+                cachedMethodMap.put(methodId, methodTime);
+            } else {
+                methodTime.sum(m); //如果已有，则进行汇总
+            }
+        }
+    }
 
-	/**
-	 * 合并数据
-	 */
-	private void doMerge() {
-		for (int i = 0; i < threadList.size(); i++) {
-			MethodStack m = threadList.get(i);
-			long statck = m.stackNum;
-			for (int j = i + 1; j < threadList.size(); j++) {
-				MethodStack tmp = threadList.get(j);
-				long tmpStack = tmp.stackNum;
-				if (statck + 1 == tmpStack) {
-					m.useTime -= tmp.useTime;
-				} else if (statck >= tmpStack) {
-					break;
-				}
-			}
-		}
-		for (int i = 0; i < threadList.size(); i++) {
-			MethodStack m = threadList.get(i);
-			if (m.useTime < 0) {
-				break;
-			}
-			TimeSortData sortData = cacheMethodMap.get(m.methodId);
-			if (sortData == null) {
-				sortData = new TimeSortData();
-				sortData.setMethodName(methodIdMap.get(m.methodId));
-				sortData.addStackValue(m.useTime);
-				cacheMethodMap.put(m.methodId, sortData);
-			} else {
-				sortData.addStackValue(m.useTime);
-			}
-		}
-		threadList.clear();
-	}
+    /**
+     * 处理净耗时
+     */
+    private void handleNetTime(List<MethodTime> methodTimeList) {
+        for (int i = 0; i < methodTimeList.size(); i++) {
+            MethodTime m = methodTimeList.get(i);
+            long stackNum = m.getStackNum();
+            for (int j = i + 1; j < methodTimeList.size(); j++) {
+                MethodTime nextMethodTime = methodTimeList.get(j);
+                long tmpStack = nextMethodTime.getStackNum();
+                if (stackNum + 1 == tmpStack) {
+                    m.setUseTime(m.getUseTime() - nextMethodTime.getUseTime()); //净耗时
+                    if (m.getChildren() == null) {
+                        m.setChildren(new ArrayList<MethodTime>());
+                    }
+                    m.getChildren().add(nextMethodTime); //加入调用链
+                } else if (stackNum >= tmpStack) {
+                    break;
+                }
+            }
+        }
+    }
 
-	/**
-	 * 输出分析结果
-	 */
-	public void printResult(String topMethodPath, String topObjectPath) {
-		List<TimeSortData> list = new ArrayList<TimeSortData>();
-		list.addAll(cacheMethodMap.values());
-		Collections.sort(list);
+    /**
+     * 输出分析结果
+     */
+    public void output(String topMethodPath) {
+        List<MethodTime> list = new ArrayList<>();
+        list.addAll(cachedMethodMap.values());
 
-		BufferedWriter topMethodWriter = null;
-		BufferedWriter topObjectWriter = null;
-		try {
-			topMethodWriter = new BufferedWriter(new FileWriter(topMethodPath));
-			topObjectWriter = new BufferedWriter(new FileWriter(topObjectPath));
-			for (TimeSortData data : list) {
-				StringBuilder sb = new StringBuilder();
-				Stack<Long> stack = data.getValueStack();
+        Collections.sort(list, MethodTime.USE_TIME_COMPARATOR);
 
-				long executeNum = stack.size();
-				long allTime;
-				if (nano) {
-					allTime = MathUtils.div(data.getSum(), 1000000);
-				} else {
-					allTime = data.getSum();
-				}
-				long useTime = MathUtils.div(allTime, executeNum);
-				sb.append(data.getMethodName());
-				sb.append("\t");
-				sb.append(executeNum);
-				sb.append("\t");
-				sb.append(useTime);
-				sb.append("\t");
-				sb.append(allTime);
-				sb.append("\n");
-				topMethodWriter.write(sb.toString());
-				if (data.getMethodName() != null && data.getMethodName().contains("<init>")) {
-					topObjectWriter.write(sb.toString());
-				}
-			}
-			topMethodWriter.flush();
-			topObjectWriter.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (topMethodWriter != null) {
-				try {
-					topMethodWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (topObjectWriter != null) {
-				try {
-					topObjectWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+        BufferedWriter topMethodWriter = null;
+        try {
+            topMethodWriter = new BufferedWriter(new FileWriter(topMethodPath));
+            for (MethodTime methodTime : list) {
+                StringBuilder sb = new StringBuilder();
+                long executeNum = methodTime.getExecuteTimes();
+                long allTime;
+                allTime = nano ? MathUtils.div(methodTime.getUseTime(), 1000000) : methodTime.getUseTime();
+                long useTime = MathUtils.div(allTime, executeNum);
+                sb.append(methodTime.getMethodName()).append("\t");
+                sb.append(executeNum).append("\t");
+                sb.append(useTime).append("\t");
+                sb.append(allTime).append("\n");
+                topMethodWriter.write(sb.toString());
+            }
+            topMethodWriter.flush();
+        } catch (IOException e) {
+            log.error("Analyze error", e);
+        } finally {
+            StreamUtil.close(topMethodWriter);
+        }
+    }
 
-	/**
-	 * 方法栈
-	 * 
-	 * @author shutong.dy
-	 * @since 2012-1-11
-	 */
-	private class MethodStack {
-		private long methodId;
-		private long useTime;
-		private long stackNum;
-	}
+    public static void main(String[] args) {
+        if (args.length != 3) {
+            System.err.println("Usage: <tprofiler.log path> <tmethod.log path> <topmethod.log path> ");
+            return;
+        }
+        ProfilerLogAnalysis analysis = new ProfilerLogAnalysis();
+        analysis.read(args[0], args[1]);
+        analysis.output(args[2]);
+    }
 }

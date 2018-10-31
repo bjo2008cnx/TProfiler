@@ -52,46 +52,38 @@ public class SamplerThread extends Thread {
 	public void run() {
 		try {
 			while (true) {
-				dumpMethod();
-				TimeUnit.SECONDS.sleep(samplerIntervalTime); // sleep
+				if (Manager.instance().canDump()) {
+					Date date = new Date();
+					Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+					for (Map.Entry<Thread, StackTraceElement[]> entry : map.entrySet()) {
+						Thread thread = entry.getKey();
+						StringBuilder sb = new StringBuilder();
+						sb.append("Thread\t");
+						sb.append(thread.getId());
+						sb.append("\t");
+						sb.append(thread.getName());
+						sb.append("\t");
+						sb.append(thread.getState());
+						sb.append("\t");
+						sb.append(date);
+						sb.append("\n");
+						fileWriter.append(sb.toString());
+						for (StackTraceElement element : entry.getValue()) {
+							fileWriter.append(element.toString());
+							fileWriter.append("\n");
+						}
+						fileWriter.flushAppend();
+					}
+				}
+				// sleep
+				TimeUnit.SECONDS.sleep(samplerIntervalTime);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			if (fileWriter != null) {
-				fileWriter.closeFile();
+				fileWriter.close();
 			}
 		}
 	}
-
-	private void dumpMethod() {
-		if (Manager.instance().canDump()) {
-            Date date = new Date();
-            Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
-            for (Map.Entry<Thread, StackTraceElement[]> entry : map.entrySet()) {
-                Thread thread = entry.getKey();
-				dumpToFile(date, entry, thread);
-            }
-        }
-	}
-
-	private void dumpToFile(Date date, Map.Entry<Thread, StackTraceElement[]> entry, Thread thread) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("Thread\t");
-		sb.append(thread.getId());
-		sb.append("\t");
-		sb.append(thread.getName());
-		sb.append("\t");
-		sb.append(thread.getState());
-		sb.append("\t");
-		sb.append(date);
-		sb.append("\n");
-		fileWriter.append(sb.toString());
-		for (StackTraceElement element : entry.getValue()) {
-            fileWriter.append(element.toString());
-            fileWriter.append("\n");
-        }
-		fileWriter.flushAppend();
-	}
-
 }

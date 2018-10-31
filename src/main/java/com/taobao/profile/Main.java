@@ -25,7 +25,6 @@ public class Main {
 	 * @param inst
 	 */
 	public static void premain(String args, Instrumentation inst) {
-		System.out.println("agent class is starting.......");
 		Manager.instance().initialization();
 		inst.addTransformer(new ProfTransformer());
 		Manager.instance().startupThread();

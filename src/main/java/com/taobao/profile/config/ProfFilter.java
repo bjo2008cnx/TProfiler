@@ -8,6 +8,9 @@
  */
 package com.taobao.profile.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,25 +22,27 @@ import java.util.Set;
  */
 public class ProfFilter {
 
+	private static Logger log = LoggerFactory.getLogger(ProfFilter.class);
+
 	/**
 	 * 注入的Package集合
 	 */
-	protected static Set<String> includePackage = new HashSet<String>();
+	protected static Set<String> includePackage = new HashSet<>();
 	/**
 	 * 不注入的Package集合
 	 */
-	private static Set<String> excludePackage = new HashSet<String>();
+	private static Set<String> excludePackage = new HashSet<>();
 	/**
 	 * 不注入的ClassLoader集合
 	 */
-	private static Set<String> excludeClassLoader = new HashSet<String>();
+	private static Set<String> excludeClassLoader = new HashSet<>();
 
 	static {
 		// 默认不注入的Package
 		excludePackage.add("java/");// 包含javax
 		excludePackage.add("sun/");// 包含sunw
 		excludePackage.add("com/sun/");
-		excludePackage.add("org/");// 包含org/xml org/jboss org/apache/xerces org/objectweb/asm  
+		excludePackage.add("org/");// 包含org/xml org/jboss org/apache/xerces org/objectweb/asm
 		// 不注入profile本身
 		excludePackage.add("com/taobao/profile");
 		excludePackage.add("com/taobao/hsf");
@@ -79,6 +84,7 @@ public class ProfFilter {
 		String icaseName = className.toLowerCase().replace('.', '/');
 		for (String v : includePackage) {
 			if (icaseName.startsWith(v)) {
+				log.debug(className+ " need to inject");
 				return true;
 			}
 		}
@@ -93,8 +99,8 @@ public class ProfFilter {
 	 */
 	public static boolean isNotNeedInject(String className) {
 		String icaseName = className.toLowerCase().replace('.', '/');
-		for (String v : excludePackage) {
-			if (icaseName.startsWith(v)) {
+		for (String prefix : excludePackage) {
+			if (icaseName.startsWith(prefix)) {
 				return true;
 			}
 		}

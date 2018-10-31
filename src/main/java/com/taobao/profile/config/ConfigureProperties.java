@@ -156,7 +156,7 @@ public class ConfigureProperties extends Properties {
     return delegate.keySet();
   }
 
-  public Set<java.util.Map.Entry<Object, Object>> entrySet() {
+  public Set<Map.Entry<Object, Object>> entrySet() {
     return delegate.entrySet();
   }
 

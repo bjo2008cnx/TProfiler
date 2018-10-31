@@ -12,7 +12,7 @@ public class DataDumpThreadTest {
     public void testRun() throws Exception {
         ProfConfig config = new ProfConfig();
         config.setDebugMode(true);
-        Thread t = new DataDumpThread(config);
+        Thread t = new DataDumpThread();
         t.start();
         Thread.sleep(2000);
         File file = new File(System.getProperty("user.home"), "/logs/tprofiler.log" );

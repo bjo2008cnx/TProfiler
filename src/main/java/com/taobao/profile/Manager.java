@@ -10,10 +10,7 @@ package com.taobao.profile;
 
 import com.taobao.profile.config.ProfConfig;
 import com.taobao.profile.config.ProfFilter;
-import com.taobao.profile.thread.DataDumpThread;
-import com.taobao.profile.thread.InnerSocketThread;
-import com.taobao.profile.thread.SamplerThread;
-import com.taobao.profile.thread.TimeControlThread;
+import com.taobao.profile.thread.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -28,36 +25,10 @@ import java.util.Date;
 public class Manager {
 
     /**
-     * 远程连接端口
-     */
-    public static int PORT;
-    /**
-     * 是否用纳秒采集
-     */
-    private static boolean NEED_NANO_TIME;
-    /**
-     * 是否忽略get/set方法
-     */
-    private static boolean IGNORE_GETSET_METHOD;
-    /**
-     * 默认方法log位置
-     */
-    public static String METHOD_LOG_PATH;
-
-    /**
      * Manager
      */
     private static Manager manager = new Manager();
 
-    /**
-     * profile配置
-     */
-    private ProfConfig profConfig;
-
-    /**
-     * 时间标记.当前时间大于开始时间小于结束时间,则可以profile. default:false 不可以profile
-     */
-    private volatile boolean timeFlag = false;
     /**
      * 开关标记.远程开始或结束的开关. default:true 打开状态
      */
@@ -67,22 +38,6 @@ public class Manager {
      */
     private volatile boolean profileFlag = false;
 
-    /**
-     * 开始时间结束时间控制线程
-     */
-    private TimeControlThread controlThread;
-    /**
-     * 对外提供Socket开关
-     */
-    private InnerSocketThread socketThread;
-    /**
-     * 将性能分析数据写出到磁盘
-     */
-    private DataDumpThread dumpThread;
-    /**
-     * 采样线程
-     */
-    private SamplerThread samplerThread;
     /**
      * 启动时间是否大于采集结束时间
      */
@@ -107,18 +62,15 @@ public class Manager {
      * 初始化配置
      */
     public void initialization() {
-        profConfig = new ProfConfig();
-        NEED_NANO_TIME = profConfig.isNeedNanoTime();
-        IGNORE_GETSET_METHOD = profConfig.isIgnoreGetSetMethod();
-        METHOD_LOG_PATH = profConfig.getMethodFilePath();
+        ProfConfig profConfig = ProfConfig.getInstance();
         // 判断启动时间是否大于采集结束时间 2012-05-25
         DateFormat df = new SimpleDateFormat("HH:mm:ss");
         String now = df.format(new Date());
-        moreThanEndTime = (now.compareTo(profConfig.getEndProfTime()) > 0);
+        //moreThanEndTime = (now.compareTo(profConfig.getEndProfTime()) > 0);//
+        moreThanEndTime = false;//默认不结束
         isDebugMode = profConfig.isDebugMode();
-        PORT = profConfig.getPort();
         recordTime = profConfig.getRecordTime();
-        setProfFilter();
+        setProfFilter(profConfig);
     }
 
     /**
@@ -132,21 +84,14 @@ public class Manager {
      * @return the needNanoTime
      */
     public static boolean isNeedNanoTime() {
-        return NEED_NANO_TIME;
+        return ProfConfig.getInstance().isNeedNanoTime();
     }
 
     /**
      * @return the ignoreGetSetMethod
      */
     public static boolean isIgnoreGetSetMethod() {
-        return IGNORE_GETSET_METHOD;
-    }
-
-    /**
-     * @param value the timeFlag to set
-     */
-    public void setTimeFlag(boolean value) {
-        timeFlag = value;
+        return ProfConfig.getInstance().isIgnoreGetSetMethod();
     }
 
     /**
@@ -180,19 +125,12 @@ public class Manager {
     }
 
     /**
-     * @return the timeFlag
-     */
-    public boolean getTimeFlag() {
-        return timeFlag;
-    }
-
-    /**
      * 判断当前是否可以dump数据
      *
      * @return
      */
     public boolean canDump() {
-        return timeFlag && switchFlag;
+        return switchFlag;
     }
 
     /**
@@ -202,13 +140,6 @@ public class Manager {
      */
     public boolean isMoreThanEndTime() {
         return moreThanEndTime;
-    }
-
-    /**
-     * @return the isDebugMode
-     */
-    public boolean isDebugMode() {
-        return isDebugMode;
     }
 
     public static int getRecordTime() {
@@ -222,7 +153,7 @@ public class Manager {
     /**
      * 设置包名过滤器
      */
-    private void setProfFilter() {
+    private void setProfFilter(ProfConfig profConfig) {
         String classLoader = profConfig.getExcludeClassLoader();
         if (classLoader != null && classLoader.trim().length() > 0) {
             String[] _classLoader = classLoader.split(";");
@@ -250,27 +181,19 @@ public class Manager {
      * 启动内部线程
      */
     public void startupThread() {
-        if (profConfig.isAutoProfiling()) {
-            //用于压测环境下，无需自动进行，需外部触发
-            controlThread = new TimeControlThread(profConfig);
-            controlThread.setName("TProfiler-TimeControl");
-            controlThread.setDaemon(true);
-            controlThread.start();
-        }
+        TimeControlThread controlThread = new TimeControlThread(ProfConfig.getInstance());
+        controlThread.setName("TProfiler-TimeControl");
+        controlThread.setDaemon(true);
+        controlThread.start();
 
-        socketThread = new InnerSocketThread();
+        InnerSocketThread socketThread = new InnerSocketThread();
         socketThread.setName("TProfiler-InnerSocket");
         socketThread.setDaemon(true);
         socketThread.start();
 
-        dumpThread = new DataDumpThread(profConfig);
+        DataDumpThread dumpThread = new DataDumpThread();
         dumpThread.setName("TProfiler-DataDump");
         dumpThread.setDaemon(true);
         dumpThread.start();
-
-        samplerThread = new SamplerThread(profConfig);
-        samplerThread.setName("TProfiler-Sampler");
-        samplerThread.setDaemon(true);
-        samplerThread.start();
     }
 }

@@ -8,16 +8,11 @@
  */
 package com.taobao.profile.utils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
-import com.taobao.profile.Manager;
 
 /**
  * 将log写出,具备日滚功能
@@ -25,7 +20,7 @@ import com.taobao.profile.Manager;
  * @author xiaodu
  * @since 2010-6-23
  */
-public class DailyRollingFileWriter {
+public class DailyRollingFileWriter implements Closeable{
 	/**
 	 * 文件名
 	 */
@@ -72,11 +67,11 @@ public class DailyRollingFileWriter {
 			String lastModified = dateFormat.format(lastModifiedDate);
 			if (lastModified.equals(dateFormat.format(now))) {
 				// 启动时间大于结束时间则续写; 启动时间小于结束时间则覆盖(true:续写 false:覆盖)
-				createWriter(filePath, Manager.instance().isMoreThanEndTime());
+				createWriter(filePath, false);
 			} else {
 				// 最后修改时间不是今天,做滚动
 				rollingFileName = fileName + sdf.format(lastModifiedDate);
-				rolling(now);
+				roll(now);
 			}
 		} else {
 			createWriter(file);
@@ -105,7 +100,7 @@ public class DailyRollingFileWriter {
 		if (time > nextRollingTime) {
 			Date now = new Date();
 			nextRollingTime = rollingCalendar.getNextRollingMillis(now);
-			rolling(now);
+			roll(now);
 		}
 		subappend(log);
 	}
@@ -137,7 +132,7 @@ public class DailyRollingFileWriter {
 	/**
 	 * 
 	 */
-	public void closeFile() {
+	public void close() {
 		if (bufferedWriter != null) {
 			try {
 				bufferedWriter.flush();
@@ -151,12 +146,12 @@ public class DailyRollingFileWriter {
 	/**
 	 * @param now
 	 */
-	private void rolling(Date now) {
+	private void roll(Date now) {
 		String datedFilename = fileName + sdf.format(now);
 		if (rollingFileName.equals(datedFilename)) {
 			return;
 		}
-		closeFile();
+		close();
 		File target = new File(rollingFileName);
 		if (target.exists()) {
 			target.delete();
