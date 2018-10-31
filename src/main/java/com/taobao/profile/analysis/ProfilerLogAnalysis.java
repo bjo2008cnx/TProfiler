@@ -4,12 +4,20 @@ import com.taobao.profile.config.ProfConfig;
 import com.taobao.profile.runtime.MethodTime;
 import com.taobao.profile.utils.MathUtils;
 import com.taobao.profile.utils.StreamUtil;
-import org.apache.commons.lang.StringUtils;
+import com.taobao.profile.utils.StringUtil;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.*;
 
 /**
  * 分析Profiler生成的Log, 根据profiler.log和MethodCache,输出top Method及堆栈
@@ -110,7 +118,7 @@ public class ProfilerLogAnalysis {
                     continue;
                 }
                 String[] data = line.split(" ");
-                if (data.length != 2|| StringUtils.isEmpty(data[0]) ||StringUtils.isEmpty(data[1])) {
+                if (data.length != 2|| StringUtil.isEmpty(data[0]) ||StringUtil.isEmpty(data[1])) {
                     continue;
                 }
                 methodIdMap.put(Long.parseLong(data[0]), String.valueOf(data[1]));
