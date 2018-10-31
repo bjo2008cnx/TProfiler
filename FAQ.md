@@ -9,7 +9,7 @@
 
 
 windows下的路径：
--javaagent:E:\codes\presstesting\presstesting-profiler\pkg\TProfiler\lib/presstesting-profiler-1.0.0-SNAPSHOT.jar -Dprofile .properties=C:\Users\lenovo\.tprofiler/profile.properties
+-javaagent:E:\codes\presstesting\presstesting-profiler\pkg\TProfiler\lib\presstesting-profiler-1.0.0-SNAPSHOT.jar -Dprofile .properties=C:\Users\lenovo\.tprofiler\profile.properties
 
 2.Utilities
 
