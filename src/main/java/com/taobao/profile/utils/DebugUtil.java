@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
  * @author Michael.Wang
  * @date 2017/3/16
  */
-public class DebugUtils {
-    private static Logger log = LoggerFactory.getLogger(DebugUtils.class);
+public class DebugUtil {
+    private static Logger log = LoggerFactory.getLogger(DebugUtil.class);
 
     public static void printThreadStack() {
         ThreadData[] threadDataArray = Profiler.threadDataArray;
