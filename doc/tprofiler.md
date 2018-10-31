@@ -1,7 +1,8 @@
 ##tprofiler源代码分析
 
-tprofiler是taobao开源的也是国内目前为止唯一一款Profiler工具，主要用于java应用的性能分析，不仅能够抓取Java方法的调用时间，还能抓取mysql的执行时间，
-是一款不错的开源性能分析工具。以下对tprofiler源码中的各包进行分析，帮助大家对tprofiler源码有个初步的认识。
+tprofiler是taobao开源的也是目前为止国外唯一一款开源Profiler工具。
+主要用于java应用的性能分析，以及调用堆栈的跟踪。不仅能够抓取Java方法的调用时间，还能抓取mysql的执行时间，是一款不错的开源性能分析工具。
+以下对tprofiler源码中的各包进行分析，帮助大家对tprofiler源码有个初步的认识。
 ###1. 最外层
 * Main  TProfiler入口,定义了premain方法，使用instrument的agent类必需的方法
 * Profiler：用于收集运行时应用数据，主要收集方法开始执行时的时间，方法结束时的的时间，用于方法耗时统计，这里有个硬编码，只统计耗时超过10ms的方法
