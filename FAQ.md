@@ -9,7 +9,7 @@
 
 
 windows下的路径：
--javaagent:d:/tprofiler-2.0.0.jar -Dprofile .properties=d:/tprofiler/profile.properties
+-javaagent:d:/tprofiler/tprofiler-2.0.0.jar -Dprofile .properties=d:/tprofiler/profile.properties
 
 
 
